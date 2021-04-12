@@ -26,7 +26,7 @@ describe("test `SMPStateMachine`", () => {
   });
 });
 
-describe("test `SMPStateMachine` succeeds", () => {
+describe.only("test `SMPStateMachine` succeeds", () => {
   const string0 = "string0";
   const string1 = "string1";
   it("same secrets", () => {
@@ -137,15 +137,21 @@ function smp(x: string, y: string): boolean {
   expectSMPFinished(alice, false);
   expectSMPFinished(bob, false);
 
+  const t0 = Date.now();
   const msg1 = alice.transit(null); // Initiate SMP
+  const t1 = Date.now();
   expectSMPFinished(alice, false);
   const msg2 = bob.transit(msg1);
+  const t2 = Date.now();
   expectSMPFinished(bob, false);
   const msg3 = alice.transit(msg2);
+  const t3 = Date.now();
   expectSMPFinished(alice, false);
   const msg4 = bob.transit(msg3);
+  const t4 = Date.now();
   expectSMPFinished(bob, true, x === y);
   alice.transit(msg4);
+  const t5 = Date.now();
   expectSMPFinished(alice, true, x === y);
   const resAlice = alice.getResult();
   const resBob = bob.getResult();
@@ -158,5 +164,11 @@ function smp(x: string, y: string): boolean {
   if (resAlice !== resBob) {
     throw new Error("Alice and Bob got different results");
   }
+  console.log(`!@# time msg1: ${t1 - t0}`);
+  console.log(`!@# time msg2: ${t2 - t1}`);
+  console.log(`!@# time msg3: ${t3 - t2}`);
+  console.log(`!@# time msg4: ${t4 - t3}`);
+  console.log(`!@# time msg5: ${t5 - t4}`);
+  console.log(`!@# time for a SMP: ${t5 - t0}`);
   return resAlice;
 }

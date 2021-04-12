@@ -203,6 +203,8 @@ const genProofAndPublicSignals = async (
   const paramsPath = path.join(buildDir, paramsFilename);
   const circuitR1csPath = path.join(buildDir, circuitR1csFilename);
   const circuitWasmPath = path.join(buildDir, circuitWasmFilename);
+  // const tmpDir = await tmp.dir();
+  // console.log(tmpDir.path);
   const tmpDir = await tmp.dir({ unsafeCleanup: true });
   const inputJsonPath = path.join(tmpDir.path, "input.json");
   const witnessPath = path.join(tmpDir.path, "witness.wtns");
@@ -220,11 +222,16 @@ const genProofAndPublicSignals = async (
   shell.exec(witnessCmd, { silent: true });
 
   const witnessJsonCmd = `${snarkjsCmd} wej ${witnessPath} ${witnessJsonPath}`;
+  const t0 = Date.now();
   shell.exec(witnessJsonCmd, { silent: true });
+  const t1 = Date.now();
+  console.log(`!@# circuit=${circuitR1csFilename}: generating witness through snarkjs takes ${t1 - t0} ms`);
 
   const proveCmd = `${zkutilPath} prove -c ${circuitR1csPath} -p ${paramsPath} -w ${witnessJsonPath} -r ${proofPath} -o ${publicJsonPath}`;
-
+  const t2 = Date.now();
   shell.exec(proveCmd, { silent: true });
+  const t3 = Date.now();
+  console.log(`!@# circuit=${circuitR1csFilename}: generating proofs through zkutil takes ${t3 - t2} ms`);
 
   // TODO: should be changed to async later
   const witness = unstringifyBigInts(
@@ -257,8 +264,11 @@ const verifyProof = async (circomFilePath: string, proof: TProof) => {
     publicSignalsPath,
     JSON.stringify(stringifyBigInts(proof.publicSignals))
   );
+  const t0 = Date.now();
   const verifyCmd = `${zkutilPath} verify -p ${paramsPath} -r ${proofPath} -i ${publicSignalsPath}`;
   const output = shell.exec(verifyCmd, { silent: true }).stdout.trim();
+  const t1 = Date.now();
+  console.log(`!@# circuit=${circuitName}: verifying through zkutil takes ${t1 - t0} ms`);
 
   await tmpDir.cleanup();
 

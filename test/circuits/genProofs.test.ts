@@ -43,8 +43,9 @@ describe("Test `genProof` and `verifyProof`", function() {
     ).to.be.rejected;
   });
 
-  it("proofSuccessfulSMP succeeds", async () => {
+  it.only("proofSuccessfulSMP succeeds", async () => {
     expect(await verifyProofSuccessfulSMP(proofSuccessfulSMP)).to.be.true;
+    process.exit(0);
 
     // Invalid public
     const invalidPublicSignals = [...proofSuccessfulSMP.publicSignals];
